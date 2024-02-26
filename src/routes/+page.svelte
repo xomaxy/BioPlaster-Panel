@@ -1,425 +1,451 @@
 <script lang="ts">
-    import Sun from "svelte-radix/Sun.svelte";
-    import Moon from "svelte-radix/Moon.svelte";
-    import { Button, Root } from "$lib/components/ui/button";
+    
+    import * as Table from "$lib/components/ui/table";
     import {Separator} from "$lib/components/ui/separator"
     import { Slider } from "$lib/components/ui/slider"
-    import { toggleMode } from "mode-watcher";
-    import {Toggle} from "$lib/components/ui/toggle"
+    import {Toggle} from "$lib/components/ui/toggle";
+    import * as Card from "$lib/components/ui/card";
+    import {Button} from "$lib/components/ui/button";
 
-function formatNumber(n: any){
-    return String(n).replace(/(.)(?=(\d{3})+$)/g,'$1,')
-}
+    import {make_toggle} from "$lib/utils.svelte";
+    import {constants} from "$lib/panel.svelte"
+    import Test from "./Test.svelte"
 
-function truncate(n: number,decimals=2){
-    return Math.floor(n*10**decimals)/(10**decimals)
-}
-
-interface Toggleable{
-    value: any,
-    toggle: ()=> void,
-    toBoolean: ()=> boolean
-}
-
-function make_toggle(t_value:any=true,f_value:any=false): Toggleable{
-    function truth(value: any){
-        return (value === t_value) ? true : false
-    }
-    let value = $state({value:t_value})
-    if (typeof t_value === 'boolean' && typeof f_value === 'boolean'){
-        return {
-            value,
-            toggle: () => value.value = !value.value,
-            toBoolean: () => value.value
-        }
-    } else {
-        return {
-            value,
-            toggle: () => value.value = (value.value === t_value) ? f_value : t_value,
-            toBoolean: () => truth(value.value) 
-        }
-    }
-
-    
+    import numbro from "numbro";
+    import { Root } from "$lib/components/ui/button";
 
 
-    
-}
+    import MyCard from "$lib/tiles/MyCard.svelte"
+    import MyTable from "$lib/tiles/MyTable.svelte";
+
 
 function to_frac(n: number): number{
     return n/100
 }
 
-// IF PERCENTAGE NAME INCLUDED THE NUMBER IS MEASURED FROM 0 TO 100
 
-const SARGASSUM_POTENTIAL = 37500000 // TOTAL DEL MERCADO DE SARGAZO KG
-const ALGINATE_PERCENTAGE_PRODUCTION = 16 //PORCENTAJE DE PRODUCCION DE ALGINATO RELATIVO AL PROCESADO 
-const CELULOSE_PERCENTAGE_PRODUCTION = 14//PORCENTAJE DE PRODUCCION DE CELULOSA RELATIVO AL PROCESADO
-const SOLID_FOAM_PERCENTAGE_RELATIVE_TO_ALGINATE = 1 // PORCENTAJE DE PRODUCCION DE SOLID FOAM RELATIVO AL ALGINATO
-const ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE = 1/to_frac(19)
-const ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE = 1/to_frac(19)
-
-let Percentage_Processed = $state([1.35]) // Sargassum Processed by BioPlaster 
-
-
-
-let Sargassum_Processed = $derived(to_frac(Percentage_Processed[0])*SARGASSUM_POTENTIAL)
-
-const { value:current_tons, toggle:toggle_tons, toBoolean: current_tons_boolean}= make_toggle('2 ton', '6 ton')
-
-
+let Slider_Percentage_Processed = $state([1.35]) // Sargassum Processed by BioPlaster
+let Percentage_Processed = $derived(Slider_Percentage_Processed[0]) // Sargassum Processed by BioPlaster 
+let Sargassum_Processed = $derived(to_frac(Percentage_Processed)*constants.SARGASSUM_POTENTIAL)
+const tons = make_toggle('2 ton', '6 ton')
 let Product_Basket = $derived({
-    Alginato: to_frac(ALGINATE_PERCENTAGE_PRODUCTION)*Sargassum_Processed,
-    Celulose: to_frac(CELULOSE_PERCENTAGE_PRODUCTION)*Sargassum_Processed
+    Alginato: to_frac(constants.ALGINATE_PERCENTAGE_PRODUCTION)*Sargassum_Processed,
+    Celulose: to_frac(constants.CELULOSE_PERCENTAGE_PRODUCTION)*Sargassum_Processed
 })
 
-// Revisar el factor 1.1875
-let Max_Teorical_Processed = {"2 ton": 2000*0.12*600,"6 ton": 6000*0.12*600}
-
-const Matrix_Cost = $state([
-  {
-    "product": "GreenShell",
-    "capacity": "2 ton",
-    "price": 7.36,
-    "margin":[30],
-    "anualproduction": [0]
-  },
-  {
-    "product": "GreenShell",
-    "capacity": "6 ton",
-    "price": 7.36,
-    "margin":[30],
-    "anualproduction": [0]
-
-  },
-  {
-    "product": "GreenShell Soluble",
-    "capacity": "2 ton",
-    "price": 5.58,
-    "margin":[30],
-    "anualproduction": [0]
-
-  },
-  {
-    "product": "GreenShell Soluble",
-    "capacity": "6 ton",
-    "price": 4.2,
-    "margin":[30],
-    "anualproduction": [0]
-
-  },
-  {
-    "product": "Alginate",
-    "capacity": "2 ton",
-    "price": 10.13,
-    "margin":[30],
-    "anualproduction": [0]
-  },
-  {
-    "product": "Alginate",
-    "capacity": "6 ton",
-    "price": 10.13,
-    "margin":[30],
-    "anualproduction": [0]
-  }
-])
-
-
-$inspect(Product_Basket)
-
-
-
-
-import * as Table from "$lib/components/ui/table";
-    import { AlignBaseline } from "svelte-radix";
-   
-    const invoices = [
-      {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card"
-      },
-      {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal"
-      },
-      {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer"
-      },
-      {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card"
-      },
-      {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal"
-      },
-      {
-        invoice: "INV006",
-        paymentStatus: "Pending",
-        totalAmount: "$200.00",
-        paymentMethod: "Bank Transfer"
-      },
-      {
-        invoice: "INV007",
-        paymentStatus: "Unpaid",
-        totalAmount: "$300.00",
-        paymentMethod: "Credit Card"
-      }
-    ];
-
-
-
-</script>
-   
-<Button on:click={toggleMode} variant="outline" size="icon">
-    <Sun
-      class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-    />
-    <Moon
-      class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-    />
-    <span class="sr-only">Toggle theme</span>
-</Button>
-
-
-
-<main>
-    <div class="">
-        <span class=" font-bold">Sargassum Market: {formatNumber(SARGASSUM_POTENTIAL/1000)} Ton</span>
-        <Separator/>
+const Product_State = $state({
+    alginate: {
+        production_cost: {
+            "2 ton": 10.13,
+            "6 ton": 10.13
+        },
+        profit_slider: {
+            max: 2,
+            value: [.3],
+            step: 0.001
+        },
+        pretty_name: "Alginate",
+        max_production:()=>Product_Basket.Alginato,
+        current_production:()=>{
+            return Product_Basket.Alginato
+            - Product_State.greenshell.production_slider.value[0]
+            - Product_State.greenshellsoluble.production_slider.value[0]
+        }
         
-        <span class=" font-bold">
-            Sargassum processed {formatNumber(Math.floor(Sargassum_Processed/1000))} Ton ({Percentage_Processed[0]}% of the market)
-        </span>
-        <br>
-        <span class=" font-bold">
-            Capacity Of Production 
-        </span>
-        <Toggle pressed={current_tons_boolean()} on:click={toggle_tons}>
-            2 Ton
-        </Toggle>
-        <Toggle pressed={!current_tons_boolean()} on:click={toggle_tons}>
-            6 Ton
-        </Toggle> 
-        <Slider bind:value={Percentage_Processed} 
-                min={0} 
-                max={current_tons_boolean() ?
-                 100*Max_Teorical_Processed["2 ton"]/SARGASSUM_POTENTIAL  :  100*Max_Teorical_Processed["6 ton"]/SARGASSUM_POTENTIAL  } 
-                step={0.0001}
-        />
-    </div>
+    },
+    celulose: {
+        production_cost: {
+            "2 ton": 1,
+            "6 ton": 2
+        },
+        profit_slider: {
+            max: 2,
+            value: [.3],
+            step: 0.001
+        },
+        pretty_name: "Celulose",
+        max_production:()=>Product_Basket.Celulose,
+        current_production:()=>{
+            return Product_Basket.Celulose
+            - Product_State.greenshell.production_slider.value[0]/
+                constants.CELULOSE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+                
+            - Product_State.greenshellsoluble.production_slider.value[0]/
+                constants.CELULOSE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+        }
+    },
+    greenshell: {
+        production_cost: {
+            "2 ton": 7.36,
+            "6 ton": 7.36
+        },
+        profit_slider: {
+            max: 2,
+            value: [.3],
+            step: 0.001
+        },
+        production_slider:{
+            max: ()=>Product_Basket.Alginato,
+            value: [0],
+            step: 0.001
+        },
+        pretty_name: "GreenShell",
+        max_production:()=>Product_Basket.Alginato*constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+    },
+    greenshellsoluble: {
+        production_cost: { 
+            "2 ton": 5.58,
+            "6 ton": 4.2
+        },
+        profit_slider: {
+            max: 2,
+            value: [.3],
+            step: 0.001
+        },
+        production_slider:{
+            max: () => {return Product_Basket.Alginato - Product_State.greenshell.production_slider.value[0]},
+            value: [0],
+            step: 0.001
+        },
+        pretty_name: "GreenShell Soluble",
+        max_production:()=>Product_Basket.Alginato*constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+    },
+})
+</script>
 
-    <div>
 
-    </div>
-</main>
-
-
-
-   
-
-  <div class="">
-    <Table.Root>
-        <Table.Header>
-            <Table.Row>
+{#snippet specialTable(Products)}
+    <MyTable>
+        <svelte:fragment slot="Header">
                 <Table.Head> Product </Table.Head>
-               
-                <Table.Head> Production Price </Table.Head>
-                <Table.Head> Profit Margin </Table.Head>
-                <Table.Head> Public Price </Table.Head>
+                <Table.Head> Yearly Production </Table.Head>
+                <Table.Head> Yearly Revenew </Table.Head>
+        </svelte:fragment>
+        <svelte:fragment slot="Body">
 
-            </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            {#each Matrix_Cost as item, i (i)}
-            {$inspect(item.capacity, current_tons)}
 
-            {#if item.capacity == current_tons.value}
+            <!-- Alginate -->
                 <Table.Row>
-                    <Table.Cell>{item.product}</Table.Cell>
-
-                    <Table.Cell>{item.price}</Table.Cell>
                     <Table.Cell>
-                        <Slider max={200} bind:value={item.margin}/> {item.margin} %
+                        {Products.alginate.pretty_name}
                     </Table.Cell>
                     <Table.Cell>
-                        {Math.floor((1+item.margin[0]/100)*item.price*100)/100}
+                        {
+                            numbro(
+                                (
+                                    Products.alginate.current_production()
+                                
+                                )/1000
+                            ).format({thousandSeparated: true,
+                                    mantissa: 2})
+                        } Ton
                     </Table.Cell>
-     
+                    <Table.Cell>
+                        {
+                            numbro(
+                                Products.alginate.current_production()*
+                                (Products.alginate.profit_slider.value[0]+1)*
+                                Products.alginate.production_cost[tons.value]
+                            ).format({
+                                output: "currency",
+                                thousandSeparated: true,
+                                mantissa: 2
+                            })
+                        }
+                    </Table.Cell>
                 </Table.Row>
-            {/if}
-            {/each}
-        </Table.Body>
-      </Table.Root>
-  </div>
-
-  <div>
-    <span>
-        Alginate {Product_Basket.Alginato}
-    </span>
-    <br>
-    <span>
-        Celulose {Product_Basket.Celulose}
-    </span>
-    <span>
-         
-    </span>
-  </div>
-
-
-  {#if current_tons_boolean()}
-  <div>
-    <Table.Root>
-        <Table.Header>
+            
+            <!-- Celulose -->
             <Table.Row>
-                <Table.Head>
-                    Product
-                </Table.Head>
-                <Table.Head>
-                    Yearly Production
-                </Table.Head>
-                <Table.Head>
-                    Yearly Revenew
-                </Table.Head>
-            </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            <Table.Row>
-                <Table.Cell>GreenShell</Table.Cell>
                 <Table.Cell>
-                    <Slider max={Product_Basket.Alginato*ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE}
-                            bind:value={Matrix_Cost[0].anualproduction}
-                    />
-                    {formatNumber(Matrix_Cost[0].anualproduction[0])} Ton ({Math.ceil(100*(Matrix_Cost[0].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)/Product_Basket.Alginato) }% of alginate)
-                </Table.Cell>
-                <Table.Cell>
-                    {Matrix_Cost[0].anualproduction[0]*Math.floor((1+Matrix_Cost[0].margin[0]/100)*Matrix_Cost[0].price*100)/100}
-       
-                </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-                <Table.Cell>GreenShell Soluble</Table.Cell>
-                <Table.Cell>
-                    <Slider max={(Product_Basket.Alginato-Matrix_Cost[0].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)*ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE}
-                            bind:value={Matrix_Cost[2].anualproduction}
-                    />
-                    {Matrix_Cost[2].anualproduction[0]} Ton ({Math.floor(100*(Matrix_Cost[2].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)/Product_Basket.Alginato) }% of alginate)
-                </Table.Cell>
-                <Table.Cell>
-                    {Matrix_Cost[2].anualproduction[0]*
-                    Math.floor(
-                        (1+Matrix_Cost[2].margin[0]/100)*
-                            Matrix_Cost[2].price*100
-                        )/100
-                    }
-                </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-                <Table.Cell>Alginate</Table.Cell>
-                <Table.Cell>
-                    {truncate(
-                        Product_Basket.Alginato - Matrix_Cost[0].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE- Matrix_Cost[2].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
-                    )
-                    }
+                    {Products.celulose.pretty_name}
                 </Table.Cell>
                 <Table.Cell>
                     {
-                    truncate(
-                    (Product_Basket.Alginato - Matrix_Cost[0].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE- Matrix_Cost[2].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE)*
-                    Math.floor(
-                        (1+Matrix_Cost[4].margin[0]/100)*
-                            Matrix_Cost[4].price*100
-                        )/100
-                    )
+                        numbro(
+                            Products.celulose.current_production()/1000
+                        )
+                        .format({thousandSeparated: true,
+                                mantissa: 2})
+                    } Ton
+                </Table.Cell>
+                <Table.Cell>
+                    {
+                        numbro(
+                        Products.celulose.current_production()*
+                        Products.celulose.profit_slider.value[0]
+                        ).format({
+                            output: "currency",
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
                     }
                 </Table.Cell>
             </Table.Row>
-        </Table.Body>
-    </Table.Root>
-  </div>
-    {:else}
-    <div>
-        <Table.Root>
-            <Table.Header>
-                <Table.Row>
-                    <Table.Head>
-                        Product
-                    </Table.Head>
-                    <Table.Head>
-                        Yearly Production
-                    </Table.Head>
-                    <Table.Head>
-                        Yearly Revenew
-                    </Table.Head>
-                </Table.Row>
-            </Table.Header>
-            <Table.Body>
-                <Table.Row>
-                    <Table.Cell>GreenShell</Table.Cell>
-                    <Table.Cell>
-                        <Slider max={Product_Basket.Alginato*ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE}
-                                bind:value={Matrix_Cost[1].anualproduction}
-                        />
-                        {Matrix_Cost[1].anualproduction[0]} Ton ({Math.ceil(100*(Matrix_Cost[1].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)/Product_Basket.Alginato) }% of alginate)
-                    </Table.Cell>
-                    <Table.Cell>
-                        {Matrix_Cost[1].anualproduction[0]*Math.floor((1+Matrix_Cost[1].margin[0]/100)*Matrix_Cost[1].price*100)/100}
-           
-                    </Table.Cell>
-                </Table.Row>
-                <Table.Row>
-                    <Table.Cell>GreenShell Soluble</Table.Cell>
-                    <Table.Cell>
-                        <Slider max={(Product_Basket.Alginato-Matrix_Cost[1].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)*ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE}
-                                bind:value={Matrix_Cost[3].anualproduction}
-                        />
-                        {Matrix_Cost[3].anualproduction[0]} Ton ({Math.floor(100*(Matrix_Cost[3].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE)/Product_Basket.Alginato) }% of alginate)
-                    </Table.Cell>
-                    <Table.Cell>
-                        {Matrix_Cost[3].anualproduction[0]*
-                        Math.floor(
-                            (1+Matrix_Cost[3].margin[0]/100)*
-                                Matrix_Cost[3].price*100
-                            )/100
-                        }
-                    </Table.Cell>
-                </Table.Row>
-                <Table.Row>
-                    <Table.Cell>Alginate</Table.Cell>
-                    <Table.Cell>
-                        {
-                            Math.floor( 100*
-                            (Product_Basket.Alginato - Matrix_Cost[1].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE- Matrix_Cost[3].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE)
-                            )/100
-                        }
-                    </Table.Cell>
-                    <Table.Cell>
-                        {
-                        Math.floor( 100*
-                        (Product_Basket.Alginato - Matrix_Cost[1].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE- Matrix_Cost[3].anualproduction[0]/ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE)*
-                        Math.floor(
-                            (1+Matrix_Cost[5].margin[0]/100)*
-                                Matrix_Cost[5].price*100
-                            )/100
-                        )/100
-                        }
-                    </Table.Cell>
-                </Table.Row>
-            </Table.Body>
-        </Table.Root>
-      </div>
-  {/if}
+
+            <!-- Greenshell -->
+            <Table.Row>
+                <Table.Cell>
+                    {Products.greenshell.pretty_name}
+                </Table.Cell>
+                <Table.Cell>
+                    <Slider
+                        max={Products.greenshell.production_slider.max()}
+                        step={Products.greenshell.production_slider.step}
+                        bind:value={Products.greenshell.production_slider.value}
+                    />
+                    {
+                        numbro(
+                        Products.greenshell.production_slider.value*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE/1000
+                        ).format({
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    } Ton of GreenShell <br/>
+                    ({numbro(
+                        (Products.greenshell.production_slider.value)
+                        /Product_Basket.Alginato 
+                        ).format({
+                            output: "percent",
+                            mantissa: 1
+                        })
+                    } of alginate used)
+                </Table.Cell>
+                <Table.Cell>
+                    {
+                        numbro(
+                            Products.greenshell.production_cost[tons.value]*
+                            (Products.greenshell.profit_slider.value[0]+1)*
+                            Products.greenshell.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+                        ).format({
+                            output: "currency",
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    }
+                </Table.Cell>
+            </Table.Row>
+
+            <!-- Greenshell Soluble -->
+            <Table.Row>
+                <Table.Cell>
+                    {Products.greenshellsoluble.pretty_name}
+                </Table.Cell>
+                <Table.Cell>
+                    <Slider
+                        max={Products.greenshellsoluble.production_slider.max()}
+                        step={Products.greenshellsoluble.production_slider.step}
+                        bind:value={Products.greenshellsoluble.production_slider.value}
+                    />
+                    {
+                        numbro(
+                        Products.greenshellsoluble.production_slider.value*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE/1000
+                        ).format({
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    } Ton of GreenShell <br/>
+                    ({numbro(
+                        (Products.greenshellsoluble.production_slider.value)/Product_Basket.Alginato 
+                        ).format({
+                            output: "percent",
+                            mantissa: 1
+                        })
+                    } of alginate used)
+                </Table.Cell>
+                <Table.Cell>
+                    {
+                        numbro(
+                            Products.greenshellsoluble.production_cost[tons.value]*
+                            (Products.greenshellsoluble.profit_slider.value[0]+1)*
+                            Products.greenshellsoluble.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+                        ).format({
+                            output: "currency",
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    }
+                </Table.Cell>
+            </Table.Row>
+            <Table.Row>
+                <Table.Cell>
+
+                </Table.Cell>
+                <Table.Head>
+                    Total
+                </Table.Head>
+                <Table.Cell>
+                    {
+                        numbro(
+                            
+                            Products.alginate.current_production()*
+                            (Products.alginate.profit_slider.value[0]+1)*
+                            Products.alginate.production_cost[tons.value]+
+
+                            Products.greenshell.production_cost[tons.value]*
+                            (Products.greenshell.profit_slider.value[0]+1)*
+                            Products.greenshell.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE+
+
+                            Products.greenshellsoluble.production_cost[tons.value]*
+                            (Products.greenshellsoluble.profit_slider.value[0]+1)*
+                            Products.greenshellsoluble.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+                        ).format({
+                            output: "currency",
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    }
+                </Table.Cell>
+            </Table.Row>
+        </svelte:fragment>
+    </MyTable>
+{/snippet}
+
+
+
+
+
+<div class="grid grid-cols-4 gap-5 m-4">
+    <MyCard className="row-span-3">
+        <svelte:fragment slot="Title">
+            Market Status
+        </svelte:fragment>
+        <svelte:fragment slot="Description">
+            Here you can modify the estimated production based on the capacity of production and the sargassum processed.
+        </svelte:fragment>
+        <svelte:fragment slot="Content">
+            <h3 class="text-lg font-semibold">
+                Sargassum Market
+            </h3> 
+                    {numbro(constants.SARGASSUM_POTENTIAL/1000)
+                    .format({thousandSeparated: true,
+                             mantissa: 0})} Ton
+            <h3 class="text-lg font-semibold">
+                Capacity of Production
+            </h3>        
+            <Toggle pressed={tons.val_to_boolean} onclick={tons.toggle}>
+                2 Ton
+            </Toggle>
+            <Toggle pressed={!tons.val_to_boolean} onclick={tons.toggle}>
+                6 Ton
+            </Toggle> 
+    
+            <h3 class="text-lg font-semibold">
+                Sargassum Processed
+            </h3>
+            {numbro(Sargassum_Processed/1000)
+            .format({thousandSeparated: true,
+                    mantissa: 2})
+            } Ton ({numbro(Percentage_Processed/100).format({output: "percent", mantissa: 2})} of the market)
+    
+            <Slider class="p-10"
+                    bind:value={Slider_Percentage_Processed} 
+                    max={tons.val_to_boolean ?
+                    100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL  :
+                    100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL  } 
+                    step={0.0001}
+            />
+            Capacity of Production
+            {numbro(
+                Percentage_Processed/
+                (tons.val_to_boolean ?
+                100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL  :
+                100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL))
+                .format({output: "percent", mantissa: 2})}
+    
+            
+            Alginate {numbro(Product_Basket.Alginato/1000).format({thousandSeparated: true, mantissa: 2})} Ton
+            Celulose {numbro(Product_Basket.Celulose/1000).format({thousandSeparated: true, mantissa: 2})} Ton
+            <br/>
+
+                <Test/>
+
+        </svelte:fragment>
+    </MyCard>
+    
+    <MyCard className="col-span-3">
+        <svelte:fragment slot="Title">
+            Production Costs
+        </svelte:fragment>
+        <svelte:fragment slot="Description">
+            Here you can modify the estimated production based on the capacity of production and the sargassum processed.
+        </svelte:fragment>
+        <svelte:fragment slot="Content">
+            <MyTable>
+                <svelte:fragment slot="Header">
+                    <Table.Head> Product </Table.Head>
+                    <Table.Head> Production Costs </Table.Head>
+                    <Table.Head> Profit Margin </Table.Head>
+                    <Table.Head> Public Price </Table.Head>
+                </svelte:fragment>
+                <svelte:fragment slot="Body">
+                    {#each Object.values(Product_State) as item}
+                        <Table.Row>
+                            <Table.Cell>
+                                {item.pretty_name}
+                            </Table.Cell>
+                            <Table.Cell>
+                            {#if typeof tons.value === "string"}
+                                {(item.production_cost as any)[tons.value]}
+                            {/if}
+                                
+                            </Table.Cell>
+                            <Table.Cell>
+                                <Slider 
+                                    max={item.profit_slider.max}
+                                    step={item.profit_slider.step}
+                                    bind:value={item.profit_slider.value}
+                                />
+                                {
+                                    numbro(item.profit_slider.value[0]).format(
+                                        {
+                                            output: "percent",
+                                            mantissa: 1
+                                        }
+                                    )
+                                }
+                            </Table.Cell>
+                            <Table.Cell>
+                                {#if typeof tons.value === "string"}
+                                {
+                                    numbro(
+                                        (1+item.profit_slider.value[0])*(item.production_cost as any)[tons.value]
+                                    ).format(
+                                        {
+                                            output: "currency",
+                                            mantissa: 2
+                                        }
+                                    )
+                                }
+                                {/if}
+                            </Table.Cell>
+                        </Table.Row>
+                    {/each}
+                </svelte:fragment>
+            </MyTable>
+            
+        </svelte:fragment>
+    </MyCard>
+
+    <MyCard className="col-span-3">
+        <svelte:fragment slot="Title">
+            Yearly Production
+        </svelte:fragment>
+        <svelte:fragment slot="Content">       
+            {@render specialTable(Product_State)}
+        </svelte:fragment>
+    </MyCard>
+
+</div>
+
+
+
 
 
   

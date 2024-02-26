@@ -4,10 +4,15 @@
 
 	type $$Props = SliderPrimitive.Props;
 
-	let className: $$Props["class"] = undefined;
+	export let className: $$Props["class"] = undefined;
+
 	export let value: $$Props["value"] = [0];
 	export { className as class };
+
 </script>
+
+
+
 
 <SliderPrimitive.Root
 	bind:value
