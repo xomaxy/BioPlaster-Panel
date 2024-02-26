@@ -311,7 +311,9 @@ const Product_State = $state({
 
 
 
-<div class="grid grid-cols-4 gap-5 m-4">
+<div class="xl:grid xl:grid-cols-4 gap-5 m-4
+            lg:grid lg:grid-cols-4
+            sm:flex sm:flex-col ">
     <MyCard className="row-span-3">
         <svelte:fragment slot="Title">
             Market Status
