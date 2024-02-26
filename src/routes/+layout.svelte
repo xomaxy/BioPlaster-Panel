@@ -18,7 +18,7 @@
 
 <div class=" fixed top-0 w-full flex flex-row items-center m-4 justify-between">
   <a href="https://www.bioplaster-research.com/">
-    <image src={bioicon} class=" w-[250px]"/>
+    <image src={"https://assets-global.website-files.com/6329f1978ad6b01b3721ce6c/6329f45cb0a06d641db638eb_nav_logo-p-500.png"} class=" w-[250px]"/>
   </a>
   
   <p class="text-xl italic  ">
