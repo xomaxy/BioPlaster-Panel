@@ -108,6 +108,9 @@ const Product_State = $state({
 })
 
 function getincome(){
+
+    // Production*(margin)*price
+
     return Product_State.alginate.current_production()*
                             (Product_State.alginate.profit_slider.value[0]+1)*
                             Product_State.alginate.production_cost[tons.value]+
@@ -125,12 +128,18 @@ function getincome(){
 }
 
 function getdirectcost(){
+    //CurrentCost*ProductionFoam
     return Product_State.greenshell.production_cost[tons.value]*
                         Product_State.greenshell.production_slider.value[0]*
-                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE+
+
+                        Product_State.greenshellsoluble.production_cost[tons.value]*
+                        Product_State.greenshellsoluble.production_slider.value[0]*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
 }
 
 function getproduction(){
+    //ProductionSolidFoamNOSol + SOl
     return Product_State.greenshell.production_slider.value[0]*
                         constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE+
                         Product_State.greenshellsoluble.production_slider.value[0]*
@@ -423,9 +432,7 @@ $effect(()=>{
 
                     }
                 />
-{
-    income
-}
+
         </svelte:fragment>
     </MyCard>
     
