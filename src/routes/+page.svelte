@@ -1,19 +1,14 @@
 <script lang="ts">
     
     import * as Table from "$lib/components/ui/table";
-    import {Separator} from "$lib/components/ui/separator"
     import { Slider } from "$lib/components/ui/slider"
     import {Toggle} from "$lib/components/ui/toggle";
-    import * as Card from "$lib/components/ui/card";
-    import {Button} from "$lib/components/ui/button";
 
     import {make_toggle} from "$lib/utils.svelte";
     import {constants} from "$lib/panel.svelte"
     import Test from "./Test.svelte"
 
     import numbro from "numbro";
-    import { Root } from "$lib/components/ui/button";
-
 
     import MyCard from "$lib/tiles/MyCard.svelte"
     import MyTable from "$lib/tiles/MyTable.svelte";
@@ -55,8 +50,8 @@ const Product_State = $state({
     },
     celulose: {
         production_cost: {
-            "2 ton": 1,
-            "6 ton": 2
+            "2 ton": 17.83,
+            "6 ton": 17.83
         },
         profit_slider: {
             max: 2,
@@ -111,6 +106,48 @@ const Product_State = $state({
         max_production:()=>Product_Basket.Alginato*constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
     },
 })
+
+function getincome(){
+    return Product_State.alginate.current_production()*
+                            (Product_State.alginate.profit_slider.value[0]+1)*
+                            Product_State.alginate.production_cost[tons.value]+
+
+                            Product_State.greenshell.production_cost[tons.value]*
+                            (Product_State.greenshell.profit_slider.value[0]+1)*
+                            Product_State.greenshell.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE+
+
+                            Product_State.greenshellsoluble.production_cost[tons.value]*
+                            (Product_State.greenshellsoluble.profit_slider.value[0]+1)*
+                            Product_State.greenshellsoluble.production_slider.value[0]*
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+
+}
+
+function getdirectcost(){
+    return Product_State.greenshell.production_cost[tons.value]*
+                        Product_State.greenshell.production_slider.value[0]*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE
+}
+
+function getproduction(){
+    return Product_State.greenshell.production_slider.value[0]*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_NO_SOLUBLE+
+                        Product_State.greenshellsoluble.production_slider.value[0]*
+                        constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+}
+
+let income = $state(getincome())
+let direct_cost = $state(getdirectcost())
+let production = $state(getproduction())
+
+$effect(()=>{
+    income = getincome()
+    direct_cost = getdirectcost()
+    production = getproduction()
+
+})
+
 </script>
 
 
@@ -119,7 +156,7 @@ const Product_State = $state({
         <svelte:fragment slot="Header">
                 <Table.Head> Product </Table.Head>
                 <Table.Head> Yearly Production </Table.Head>
-                <Table.Head> Yearly Revenew </Table.Head>
+                <Table.Head> Yearly Revenue </Table.Head>
         </svelte:fragment>
         <svelte:fragment slot="Body">
 
@@ -308,9 +345,6 @@ const Product_State = $state({
 {/snippet}
 
 
-
-
-
 <div class="xl:grid xl:grid-cols-4 gap-5 m-4
             lg:grid lg:grid-cols-4
             sm:flex sm:flex-col ">
@@ -319,33 +353,37 @@ const Product_State = $state({
             Market Status
         </svelte:fragment>
         <svelte:fragment slot="Description">
-            Here you can modify the estimated production based on the capacity of production and the sargassum processed.
+            Adjust the production estimate here by considering production capacity and the amount of sargassum processed.
         </svelte:fragment>
         <svelte:fragment slot="Content">
             <h3 class="text-lg font-semibold">
                 Sargassum Market
-            </h3> 
-                    {numbro(constants.SARGASSUM_POTENTIAL/1000)
+            </h3>
+            <p class="mb-3">
+                {numbro(constants.SARGASSUM_POTENTIAL/1000)
                     .format({thousandSeparated: true,
                              mantissa: 0})} Ton
+            </p>
+                    
             <h3 class="text-lg font-semibold">
                 Capacity of Production
             </h3>        
             <Toggle pressed={tons.val_to_boolean} onclick={tons.toggle}>
-                2 Ton
+                1 M
             </Toggle>
             <Toggle pressed={!tons.val_to_boolean} onclick={tons.toggle}>
-                6 Ton
+                2.5 M
             </Toggle> 
-    
+            <div class="mb-3"></div>
             <h3 class="text-lg font-semibold">
                 Sargassum Processed
             </h3>
+            
             {numbro(Sargassum_Processed/1000)
             .format({thousandSeparated: true,
                     mantissa: 2})
-            } Ton ({numbro(Percentage_Processed/100).format({output: "percent", mantissa: 2})} of the market)
-    
+            } Ton <br/> ({numbro(Percentage_Processed/100).format({output: "percent", mantissa: 2})} of the market)
+            <div class="mb-3"></div>
             <Slider class="p-10"
                     bind:value={Slider_Percentage_Processed} 
                     max={tons.val_to_boolean ?
@@ -353,7 +391,7 @@ const Product_State = $state({
                     100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL  } 
                     step={0.0001}
             />
-            Capacity of Production
+
             {numbro(
                 Percentage_Processed/
                 (tons.val_to_boolean ?
@@ -361,13 +399,33 @@ const Product_State = $state({
                 100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL))
                 .format({output: "percent", mantissa: 2})}
     
-            
-            Alginate {numbro(Product_Basket.Alginato/1000).format({thousandSeparated: true, mantissa: 2})} Ton
-            Celulose {numbro(Product_Basket.Celulose/1000).format({thousandSeparated: true, mantissa: 2})} Ton
+            <h3 class="text-lg font-semibold">
+                Alginate Production
+            </h3>
+             {numbro(Product_Basket.Alginato/1000).format({thousandSeparated: true, mantissa: 2})} Ton
+             <div class="mb-3"></div>
+            <h3 class="text-lg font-semibold">
+                Celulose Production
+            </h3>
+             {numbro(Product_Basket.Celulose/1000).format({thousandSeparated: true, mantissa: 2})} Ton
             <br/>
+            <div class="mb-3"></div>
 
-                <Test/>
+                <Test
+                    bind:INCOME={
+                        income
+                    }
+                    bind:PRODUCTION_SOLID_FOAM={
+                        production
+                    }
+                    bind:DIRECT_COST={
+                        direct_cost
 
+                    }
+                />
+{
+    income
+}
         </svelte:fragment>
     </MyCard>
     
@@ -376,7 +434,7 @@ const Product_State = $state({
             Production Costs
         </svelte:fragment>
         <svelte:fragment slot="Description">
-            Here you can modify the estimated production based on the capacity of production and the sargassum processed.
+            Adjust the estimated production here based on production capacity and processed sargassum
         </svelte:fragment>
         <svelte:fragment slot="Content">
             <MyTable>
@@ -394,7 +452,16 @@ const Product_State = $state({
                             </Table.Cell>
                             <Table.Cell>
                             {#if typeof tons.value === "string"}
-                                {(item.production_cost as any)[tons.value]}
+                                {
+                                    numbro(
+                                    (item.production_cost as any)[tons.value]
+                                    ).format(
+                                        {
+                                            output: "currency",
+                                            mantissa: 2
+                                        }
+                                    )
+                                }
                             {/if}
                                 
                             </Table.Cell>
