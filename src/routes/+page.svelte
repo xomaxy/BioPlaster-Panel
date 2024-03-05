@@ -80,7 +80,7 @@ const Product_State = $state({
             step: 0.001
         },
         production_slider:{
-            max: ()=>Product_Basket.Alginato,
+            max: ()=>Product_Basket.Alginato*47/100,
             value: [0],
             step: 0.001
         },
@@ -98,7 +98,7 @@ const Product_State = $state({
             step: 0.001
         },
         production_slider:{
-            max: () => {return Product_Basket.Alginato - Product_State.greenshell.production_slider.value[0]},
+            max: () => {return Product_Basket.Alginato*47/100 - Product_State.greenshell.production_slider.value[0]},
             value: [0],
             step: 0.001
         },
