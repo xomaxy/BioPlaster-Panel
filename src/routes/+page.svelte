@@ -165,7 +165,7 @@ $effect(()=>{
         <svelte:fragment slot="Header">
                 <Table.Head> Product </Table.Head>
                 <Table.Head> Yearly Production </Table.Head>
-                <Table.Head> Yearly Revenue </Table.Head>
+                <Table.Head> Yearly Revenue (USD) </Table.Head>
         </svelte:fragment>
         <svelte:fragment slot="Body">
 
@@ -376,12 +376,15 @@ $effect(()=>{
                     
             <h3 class="text-lg font-semibold">
                 Capacity of Production
-            </h3>        
+            </h3> 
+            <p class="text-xs py-3">
+                The production capacity options are tied to two different equipment layouts, each having a distinct cost.
+            </p>
             <Toggle pressed={tons.val_to_boolean} onclick={tons.toggle}>
-                1 M
+                1 M (USD)
             </Toggle>
             <Toggle pressed={!tons.val_to_boolean} onclick={tons.toggle}>
-                2.5 M
+                2.5 M (USD)
             </Toggle> 
             <div class="mb-3"></div>
             <h3 class="text-lg font-semibold">
@@ -447,9 +450,9 @@ $effect(()=>{
             <MyTable>
                 <svelte:fragment slot="Header">
                     <Table.Head> Product </Table.Head>
-                    <Table.Head> Production Costs </Table.Head>
+                    <Table.Head> Production Costs (USD)</Table.Head>
                     <Table.Head> Profit Margin </Table.Head>
-                    <Table.Head> Public Price </Table.Head>
+                    <Table.Head> Public Price (USD) </Table.Head>
                 </svelte:fragment>
                 <svelte:fragment slot="Body">
                     {#each Object.values(Product_State) as item}
@@ -512,6 +515,9 @@ $effect(()=>{
     <MyCard className="col-span-3">
         <svelte:fragment slot="Title">
             Yearly Production
+        </svelte:fragment>
+        <svelte:fragment slot="Description">       
+            Adjust the production of GreenShell and GreenShell Soluble to estimate the revenue.
         </svelte:fragment>
         <svelte:fragment slot="Content">       
             {@render specialTable(Product_State)}
