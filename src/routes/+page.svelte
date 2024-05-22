@@ -19,24 +19,42 @@ function to_frac(n: number): number{
 }
 
 
-let Slider_Percentage_Processed = $state([1.35]) // Sargassum Processed by BioPlaster
+let Slider_Percentage_Processed = $state([0.97]) // Sargassum Processed by BioPlaster
 let Percentage_Processed = $derived(Slider_Percentage_Processed[0]) // Sargassum Processed by BioPlaster 
 let Sargassum_Processed = $derived(to_frac(Percentage_Processed)*constants.SARGASSUM_POTENTIAL)
 const tons = make_toggle('2 ton', '6 ton')
 let Product_Basket = $derived({
     Alginato: to_frac(constants.ALGINATE_PERCENTAGE_PRODUCTION)*Sargassum_Processed,
-    Celulose: to_frac(constants.CELULOSE_PERCENTAGE_PRODUCTION)*Sargassum_Processed
+    Celulose: to_frac(constants.CELULOSE_PERCENTAGE_PRODUCTION)*Sargassum_Processed,
+    Film: 1_838_232*0.52
 })
 
 const Product_State = $state({
-    alginate: {
+    film: {
         production_cost: {
-            "2 ton": 10.13,
-            "6 ton": 10.13
+            "2 ton": 2.74,
+            "6 ton": 2.74
         },
         profit_slider: {
             max: 2,
-            value: [.3],
+            value: [.9],
+            step: 0.001
+        },
+        pretty_name: "Film",
+        max_production:()=>Product_Basket.Alginato,
+        current_production:()=>{
+            return Product_Basket.Film
+        }
+        
+    },
+    alginate: {
+        production_cost: {
+            "2 ton": 11.69,
+            "6 ton": 11.69
+        },
+        profit_slider: {
+            max: 2,
+            value: [.4],
             step: 0.001
         },
         pretty_name: "Alginate",
@@ -50,12 +68,12 @@ const Product_State = $state({
     },
     celulose: {
         production_cost: {
-            "2 ton": 17.83,
-            "6 ton": 17.83
+            "2 ton": 9.00,
+            "6 ton": 9.00
         },
         profit_slider: {
             max: 2,
-            value: [.3],
+            value: [1.77],
             step: 0.001
         },
         pretty_name: "Celulose",
@@ -71,12 +89,12 @@ const Product_State = $state({
     },
     greenshell: {
         production_cost: {
-            "2 ton": 7.36,
-            "6 ton": 7.36
+            "2 ton": 3.11,
+            "6 ton": 3.11
         },
         profit_slider: {
             max: 2,
-            value: [.3],
+            value: [1.57],
             step: 0.001
         },
         production_slider:{
@@ -89,12 +107,12 @@ const Product_State = $state({
     },
     greenshellsoluble: {
         production_cost: { 
-            "2 ton": 5.58,
-            "6 ton": 4.2
+            "2 ton": 2.36,
+            "6 ton": 2.36
         },
         profit_slider: {
             max: 2,
-            value: [.3],
+            value: [1.57],
             step: 0.001
         },
         production_slider:{
@@ -157,6 +175,7 @@ $effect(()=>{
 
 })
 
+
 </script>
 
 
@@ -168,7 +187,38 @@ $effect(()=>{
                 <Table.Head> Yearly Revenue (USD) </Table.Head>
         </svelte:fragment>
         <svelte:fragment slot="Body">
+            
 
+            <!-- Film -->
+            <Table.Row>
+                <Table.Cell>
+                    {Products.film.pretty_name}
+                </Table.Cell>
+                <Table.Cell>
+                    {
+                        numbro(
+                            (
+                                Products.film.current_production()
+                            
+                            )/1000
+                        ).format({thousandSeparated: true,
+                                mantissa: 2})
+                    } Ton
+                </Table.Cell>
+                <Table.Cell>
+                    {
+                        numbro(
+                            Products.film.current_production()*
+                            (Products.film.profit_slider.value[0]+1)*
+                            Products.film.production_cost[tons.value]
+                        ).format({
+                            output: "currency",
+                            thousandSeparated: true,
+                            mantissa: 2
+                        })
+                    }
+                </Table.Cell>
+            </Table.Row>
 
             <!-- Alginate -->
                 <Table.Row>
@@ -340,7 +390,12 @@ $effect(()=>{
                             Products.greenshellsoluble.production_cost[tons.value]*
                             (Products.greenshellsoluble.profit_slider.value[0]+1)*
                             Products.greenshellsoluble.production_slider.value[0]*
-                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE
+                            constants.ALGINATE_TO_SOLIDFOAM_RATIO_SOLUBLE+
+
+                            Products.film.current_production()*
+                            (Products.film.profit_slider.value[0]+1)*
+                            Products.film.production_cost[tons.value]
+
                         ).format({
                             output: "currency",
                             thousandSeparated: true,
@@ -381,11 +436,13 @@ $effect(()=>{
                 The production capacity options are tied to two different equipment layouts, each having a distinct cost.
             </p>
             <Toggle pressed={tons.val_to_boolean} onclick={tons.toggle}>
-                1 M (USD)
+                2.5 M (USD)
             </Toggle>
             <Toggle pressed={!tons.val_to_boolean} onclick={tons.toggle}>
-                2.5 M (USD)
+                1 M (USD)
             </Toggle> 
+            
+            
             <div class="mb-3"></div>
             <h3 class="text-lg font-semibold">
                 Sargassum Processed
@@ -399,16 +456,17 @@ $effect(()=>{
             <Slider class="p-10"
                     bind:value={Slider_Percentage_Processed} 
                     max={tons.val_to_boolean ?
-                    100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL  :
-                    100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL  } 
+                    100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL :
+                    100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL 
+                     } 
                     step={0.0001}
             />
 
             {numbro(
                 Percentage_Processed/
                 (tons.val_to_boolean ?
-                100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL  :
-                100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL))
+                100*constants.MAX_TEORICAL_PROCESSED["6 ton"]/constants.SARGASSUM_POTENTIAL  :
+                100*constants.MAX_TEORICAL_PROCESSED["2 ton"]/constants.SARGASSUM_POTENTIAL))
                 .format({output: "percent", mantissa: 2})}
     
             <h3 class="text-lg font-semibold">
@@ -445,9 +503,89 @@ $effect(()=>{
         </svelte:fragment>
         <svelte:fragment slot="Description">
             Adjust the estimated production here based on production capacity and processed sargassum
+       
+
+        
+
         </svelte:fragment>
         <svelte:fragment slot="Content">
-            <MyTable>
+ 
+        Stage 1
+        <br/>
+            At the beginning of Year One, we will primarily produce only Film to streamline processes and establish a strong market presence.
+        <br/>
+
+        <MyTable>
+            <svelte:fragment slot="Header">
+                <Table.Head> Product </Table.Head>
+                <Table.Head> Production Costs (USD)</Table.Head>
+                <Table.Head> Profit Margin </Table.Head>
+                <Table.Head> Public Price (USD) </Table.Head>
+            </svelte:fragment>
+            <svelte:fragment slot="Body">
+                {#each Object.values(Product_State) as item}
+
+                {#if item.pretty_name == 'Film'}
+                    <Table.Row>
+                        <Table.Cell>
+                            {item.pretty_name}
+                        </Table.Cell>
+                        <Table.Cell>
+                        {#if typeof tons.value === "string"}
+                            {
+                                numbro(
+                                (item.production_cost as any)[tons.value]
+                                ).format(
+                                    {
+                                        output: "currency",
+                                        mantissa: 2
+                                    }
+                                )
+                            }
+                        {/if}
+                            
+                        </Table.Cell>
+                        <Table.Cell>
+                            <Slider 
+                                max={item.profit_slider.max}
+                                step={item.profit_slider.step}
+                                bind:value={item.profit_slider.value}
+                            />
+                            {
+                                numbro(item.profit_slider.value[0]).format(
+                                    {
+                                        output: "percent",
+                                        mantissa: 1
+                                    }
+                                )
+                            }
+                        </Table.Cell>
+                        <Table.Cell>
+                            {#if typeof tons.value === "string"}
+                            {
+                                numbro(
+                                    (1+item.profit_slider.value[0])*(item.production_cost as any)[tons.value]
+                                ).format(
+                                    {
+                                        output: "currency",
+                                        mantissa: 2
+                                    }
+                                )
+                            }
+                            {/if}
+                        </Table.Cell>
+                    </Table.Row>
+                {/if}
+                {/each}
+            </svelte:fragment>
+        </MyTable>
+
+        Stage 2
+        <br/>
+            Later we will produce Alginate and Cellulose from Sargassum extractions and start the development of Greenshell products.
+        <br/>
+
+        <MyTable>
                 <svelte:fragment slot="Header">
                     <Table.Head> Product </Table.Head>
                     <Table.Head> Production Costs (USD)</Table.Head>
@@ -456,6 +594,8 @@ $effect(()=>{
                 </svelte:fragment>
                 <svelte:fragment slot="Body">
                     {#each Object.values(Product_State) as item}
+
+                    {#if item.pretty_name != 'Film'}
                         <Table.Row>
                             <Table.Cell>
                                 {item.pretty_name}
@@ -505,12 +645,15 @@ $effect(()=>{
                                 {/if}
                             </Table.Cell>
                         </Table.Row>
+                    {/if}
                     {/each}
                 </svelte:fragment>
-            </MyTable>
+        </MyTable>
             
         </svelte:fragment>
     </MyCard>
+
+    
 
     <MyCard className="col-span-3">
         <svelte:fragment slot="Title">
