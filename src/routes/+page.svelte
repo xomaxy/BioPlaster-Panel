@@ -1,4 +1,8 @@
+
+
 <script lang="ts">
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
     
     import * as Table from "$lib/components/ui/table";
     import { Slider } from "$lib/components/ui/slider"
@@ -36,8 +40,8 @@ const Product_State = $state({
             "6 ton": 2.74
         },
         profit_slider: {
-            max: 2,
-            value: [.9],
+            max: 0.999,
+            value: [.47],
             step: 0.001
         },
         pretty_name: "Film",
@@ -53,8 +57,8 @@ const Product_State = $state({
             "6 ton": 11.69
         },
         profit_slider: {
-            max: 2,
-            value: [.4],
+            max: 0.999,
+            value: [.286],
             step: 0.001
         },
         pretty_name: "Alginate",
@@ -72,8 +76,8 @@ const Product_State = $state({
             "6 ton": 9.00
         },
         profit_slider: {
-            max: 2,
-            value: [1.77],
+            max: 0.999,
+            value: [0.639],
             step: 0.001
         },
         pretty_name: "Celulose",
@@ -93,8 +97,8 @@ const Product_State = $state({
             "6 ton": 3.11
         },
         profit_slider: {
-            max: 2,
-            value: [1.57],
+            max: 0.999,
+            value: [0.611],
             step: 0.001
         },
         production_slider:{
@@ -111,8 +115,8 @@ const Product_State = $state({
             "6 ton": 2.36
         },
         profit_slider: {
-            max: 2,
-            value: [1.57],
+            max: 0.999,
+            value: [0.611],
             step: 0.001
         },
         production_slider:{
@@ -435,13 +439,40 @@ $effect(()=>{
             <p class="text-xs py-3">
                 The production capacity options are tied to two different equipment layouts, each having a distinct cost.
             </p>
+
+            <p>
+                Stage 1
+                
+            </p>
+            <p>
+                1 M (USD) of inversion with a capacity of Film production of 
+                {
+                numbro(
+                    Product_State['film'].current_production()/1000
+                ).format({mantissa: 0})
+                } tons
+
+            </p>
+
+            <br/>
+
+
+            <p>
+                Stage 2
+            </p>
+            <p>
+                2.5 M (USD) of inversion with the following capacity of production.
+            </p>
+
+<!-- OLD TOGGLE SWITCH -->
+<!-- 
             <Toggle pressed={tons.val_to_boolean} onclick={tons.toggle}>
                 2.5 M (USD)
             </Toggle>
             <Toggle pressed={!tons.val_to_boolean} onclick={tons.toggle}>
                 1 M (USD)
             </Toggle> 
-            
+-->
             
             <div class="mb-3"></div>
             <h3 class="text-lg font-semibold">
@@ -564,7 +595,7 @@ $effect(()=>{
                             {#if typeof tons.value === "string"}
                             {
                                 numbro(
-                                    (1+item.profit_slider.value[0])*(item.production_cost as any)[tons.value]
+                                    (item.production_cost as any)[tons.value]/(1-item.profit_slider.value[0])
                                 ).format(
                                     {
                                         output: "currency",
@@ -634,7 +665,7 @@ $effect(()=>{
                                 {#if typeof tons.value === "string"}
                                 {
                                     numbro(
-                                        (1+item.profit_slider.value[0])*(item.production_cost as any)[tons.value]
+                                        (item.production_cost as any)[tons.value]/(1-item.profit_slider.value[0])
                                     ).format(
                                         {
                                             output: "currency",
